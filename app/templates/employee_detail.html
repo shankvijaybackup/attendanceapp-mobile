@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>{{ emp.name }} | Admin Console</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background: #f4f6f8;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }
+
+        .back-link {
+            text-decoration: none;
+            color: #6f2c91;
+            font-weight: bold;
+        }
+
+        h1 {
+            margin: 0;
+            color: #333;
+        }
+
+        .profile-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .info-group label {
+            display: block;
+            color: #777;
+            font-size: 13px;
+            margin-bottom: 5px;
+        }
+
+        .info-group div {
+            font-size: 16px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background: #f9f9f9;
+            color: #555;
+        }
+
+        .badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .PRESENT {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .ABSENT {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .LEAVE {
+            background: #fef9c3;
+            color: #854d0e;
+        }
+
+        .HOLIDAY {
+            background: #e0f2fe;
+            color: #075985;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="header">
+            <a href="/admin" class="back-link">← Back to Dashboard</a>
+            <div style="text-align: right">
+                <span style="color: #6f2c91; font-weight: bold;">Employee Profile</span>
+            </div>
+        </div>
+
+        <div class="profile-grid">
+            <div class="info-group">
+                <label>Name</label>
+                <div style="font-size: 24px;">{{ emp.name }}</div>
+            </div>
+            <div class="info-group">
+                <label>Employee ID</label>
+                <div>{{ emp.emp_id }}</div>
+            </div>
+            <div class="info-group">
+                <label>Email</label>
+                <div>{{ emp.email or '-' }}</div>
+            </div>
+            <div class="info-group">
+                <label>Device</label>
+                <div>{{ emp.device or 'Standard Device' }}</div>
+            </div>
+            <div class="info-group">
+                <label>Location</label>
+                <div>{{ emp.location }}</div>
+            </div>
+            <div class="info-group">
+                <label>Manager</label>
+                <div>{{ emp.manager.name if emp.manager else '-' }} ({{ emp.manager_emp_id }})</div>
+            </div>
+        </div>
+
+        <!-- Monthly Stats & Map -->
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-bottom: 30px;">
+            <div style="background:#f9fafb; padding:20px; border-radius:8px; border:1px solid #eee;">
+                <h3 style="margin-top:0">January 2026 Attendance</h3>
+                <div style="display:flex; justify-content:space-around; text-align:center;">
+                    <div>
+                        <div style="font-size:32px; font-weight:bold; color:#166534">18</div>
+                        <div style="color:#777; font-size:12px;">PRESENT</div>
+                    </div>
+                    <div>
+                        <div style="font-size:32px; font-weight:bold; color:#991b1b">2</div>
+                        <div style="color:#777; font-size:12px;">ABSENT</div>
+                    </div>
+                    <div>
+                        <div style="font-size:32px; font-weight:bold; color:#854d0e">1</div>
+                        <div style="color:#777; font-size:12px;">LEAVE</div>
+                    </div>
+                </div>
+            </div>
+
+            <div
+                style="background:#f9fafb; padding:20px; border-radius:8px; border:1px solid #eee; height: 150px; position:relative; overflow:hidden;">
+                <h3 style="margin-top:0; margin-bottom:10px;">Current Location</h3>
+                <!-- Mock Map Background -->
+                <div
+                    style="background-color: #e5e7eb; width:100%; height:100%; position:absolute; top:0; left:0; z-index:0;">
+                </div>
+                <div style="position:relative; z-index:1; padding-top:40px; text-align:center;">
+                    <div style="font-size:24px;">📍</div>
+                    <div style="font-weight:bold;">{{ emp.location }}, India</div>
+                    <div style="font-size:12px; color:#555;">GPS: 17.3850° N, 78.4867° E</div>
+                </div>
+            </div>
+        </div>
+
+        <h3>Attendance History (Last 30 Days)</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Source</th>
+                    <th>Last Updated</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for rec in history %}
+                <tr>
+                    <td>{{ rec.day }}</td>
+                    <td><span class="badge {{ rec.status }}">{{ rec.status }}</span></td>
+                    <td>{{ rec.source_system }}</td>
+                    <td>{{ rec.last_updated_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" style="text-align:center; color:#999;">No attendance records found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</body>
+
+</html>

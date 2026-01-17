@@ -48,6 +48,8 @@ class Employee(Base):
     name: Mapped[str] = mapped_column(String(200))
     location: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     cost_center: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    email: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    device: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
 
     manager_emp_id: Mapped[Optional[str]] = mapped_column(
         String(32), ForeignKey("employees.emp_id"), nullable=True

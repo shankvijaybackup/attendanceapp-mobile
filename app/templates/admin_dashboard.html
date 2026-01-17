@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Console | Dr. Reddy's</title>
+    <style>
+        :root {
+            --sidebar-width: 260px;
+            --dr-purple: #6f2c91;
+            --header-height: 60px;
+        }
+
+        body {
+            margin: 0;
+            display: flex;
+            height: 100vh;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background: #f4f6f8;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: #2c1a3b;
+            color: white;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            height: var(--header-height);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            font-weight: bold;
+            font-size: 18px;
+            background: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-item {
+            padding: 15px 20px;
+            cursor: pointer;
+            border-left: 4px solid transparent;
+            transition: 0.2s;
+            color: #ccc;
+        }
+
+        .nav-item:hover,
+        .nav-item.active {
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            border-left-color: var(--dr-purple);
+        }
+
+        /* Main Content */
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header {
+            height: var(--header-height);
+            background: white;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+        }
+
+        .user-profile {
+            font-weight: 600;
+            color: #555;
+        }
+
+        .content {
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        /* Views (Tabs) */
+        .view-section {
+            display: none;
+        }
+
+        .view-section.active {
+            display: block;
+        }
+
+        /* Tables & Cards */
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-val {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--dr-purple);
+        }
+
+        .stat-label {
+            color: #777;
+            font-size: 14px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        th,
+        td {
+            text-align: left;
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background: #f9f9f9;
+            color: #555;
+            font-weight: 600;
+        }
+
+        /* Search */
+        .search-bar {
+            padding: 10px;
+            width: 300px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+
+        .badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .badge-present {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .badge-absent {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        /* Simulation Controls */
+        .sim-btn {
+            padding: 10px 20px;
+            margin-right: 10px;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            opacity: 0.6;
+        }
+
+        .sim-btn.active {
+            opacity: 1;
+            box-shadow: 0 0 0 2px #333;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="sidebar">
+        <div class="sidebar-header">Dr. Reddy's Admin</div>
+        <div class="nav-item active" onclick="showView('dashboard')">Dashboard</div>
+        <div class="nav-item" onclick="showView('employees')">Employees</div>
+        <div class="nav-item" onclick="showView('requests')">Requests</div>
+        <div class="nav-item" onclick="showView('system')">System & Simulation</div>
+    </div>
+
+    <div class="main">
+        <div class="header">
+            <div id="pageTitle">Dashboard</div>
+            <div class="user-profile">Admin User</div>
+        </div>
+
+        <div class="content">
+            <!-- Dashboard View -->
+            <div id="dashboard" class="view-section active">
+                <div class="stat-grid">
+                    <div class="stat-card">
+                        <div class="stat-val">{{ total_employees }}</div>
+                        <div class="stat-label">Total Employees</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-val">{{ present_today }}</div>
+                        <div class="stat-label">Present Today</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-val">{{ pending_requests }}</div>
+                        <div class="stat-label">Pending Requests</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>Recent Activity</h3>
+                    <p>Welcome to the SAP Attendance Administration Console.</p>
+                </div>
+            </div>
+
+            <!-- Employees View -->
+            <div id="employees" class="view-section">
+                <div class="card">
+                    <h3>Employee Directory</h3>
+                    <input type="text" id="empSearch" class="search-bar" placeholder="Search by name or ID..."
+                        onkeyup="filterTable()">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Location</th>
+                                <th>Manager</th>
+                                <th>Status (Today)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="empTableBody">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Requests View -->
+            <div id="requests" class="view-section">
+                <div class="card">
+                    <h3>Attendance Change Requests</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Employee</th>
+                                <th>Type</th>
+                                <th>Dates</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for req in requests %}
+                            <tr>
+                                <td>#{{ req.id }}</td>
+                                <td>{{ req.emp_id }}</td>
+                                <td>{{ req.request_type }}</td>
+                                <td>{{ req.date_start }} - {{ req.date_end }}</td>
+                                <td>{{ req.status }}</td>
+                                <td><a href="/admin/requests/{{ req.id }}" style="color:blue">View</a></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- System View -->
+            <div id="system" class="view-section">
+                <div class="card">
+                    <h3>Simulation Controls</h3>
+                    <p>Current State: <b id="simState">LOADING...</b></p>
+
+                    <div style="margin-top: 20px;">
+                        <button class="sim-btn" style="background:#ddd" onclick="setSim('NORMAL')">NORMAL</button>
+                        <button class="sim-btn" style="background:#fca5a5" onclick="setSim('HOLIDAY')">HOLIDAY
+                            BLOCK</button>
+                        <button class="sim-btn" style="background:#fcd34d" onclick="setSim('LOCKOUT')">LOCKOUT</button>
+                        <button class="sim-btn" style="background:#93c5fd" onclick="setSim('UNLOCK_RESTRICTION')">ATOM
+                            UNLOCK</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Navigation Logic
+        function showView(viewId) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            event.target.classList.add('active');
+
+            document.getElementById('pageTitle').innerText = viewId.charAt(0).toUpperCase() + viewId.slice(1);
+
+            if (viewId === 'employees') loadEmployees();
+            if (viewId === 'system') loadSimState();
+        }
+
+        // Employee Data Logic
+        let allEmployees = [];
+        async function loadEmployees() {
+            if (allEmployees.length > 0) return; // cache
+            const res = await fetch('/api/employees-list');
+            allEmployees = await res.json();
+            renderTable(allEmployees);
+        }
+
+        function renderTable(data) {
+            const tbody = document.getElementById('empTableBody');
+            tbody.innerHTML = data.map(e => `
+            <tr>
+                <td>${e.emp_id}</td>
+                <td>${e.name}</td>
+                <td>${e.location}</td>
+                <td>${e.manager_emp_id || '-'}</td>
+                <td><span class="badge badge-present">Unknown</span></td> 
+            </tr>
+        `).join('');
+            // Note: Real status would require a heavy query or separate API. For demo, we can just show static or fetch.
+        }
+
+        function filterTable() {
+            const term = document.getElementById('empSearch').value.toLowerCase();
+            const filtered = allEmployees.filter(e =>
+                e.name.toLowerCase().includes(term) ||
+                e.emp_id.toLowerCase().includes(term) ||
+                e.location.toLowerCase().includes(term)
+            );
+            renderTable(filtered);
+        }
+
+        // Simulation Logic
+        async function loadSimState() {
+            const res = await fetch('/api/simulate');
+            const data = await res.json();
+            document.getElementById('simState').innerText = data.state;
+        }
+        async function setSim(state) {
+            await fetch('/api/simulate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ state: state })
+            });
+            loadSimState();
+        }
+
+        // Auto-load sim state on init
+        loadSimState();
+    </script>
+
+</body>
+
+</html>

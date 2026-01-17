@@ -399,10 +399,75 @@ def mark_attendance_api(payload: MarkAttendanceIn, db: Session = Depends(get_db)
     return {"status": "success", "message": "Marked present"}
 
 
+# -----------------------------
+# Admin UI
+# -----------------------------
+
+@app.get("/admin/login", response_class=HTMLResponse)
+def admin_login_ui(request: Request):
+    return templates.TemplateResponse("admin_login.html", {"request": request})
+
+@app.post("/admin/login")
+def admin_login(username: str = Form(...), password: str = Form(...)):
+    # Mock Auth
+    if username == "admin" and password == "admin":
+        response = RedirectResponse(url="/admin", status_code=303)
+        response.set_cookie(key="admin_session", value="true")
+        return response
+    return HTMLResponse("Invalid credentials", status_code=401)
+
 @app.get("/admin", response_class=HTMLResponse)
-def admin_home(request: Request, db: Session = Depends(get_db)):
+def admin_dashboard(request: Request, db: Session = Depends(get_db)):
+    # Check auth
+    if not request.cookies.get("admin_session"):
+        return RedirectResponse(url="/admin/login")
+
+    # Fetch Stats
+    total_emps = db.query(Employee).count()
+    today = date.today()
+    present_today = db.query(AttendanceRecord).filter(
+        AttendanceRecord.day == today, 
+        AttendanceRecord.status == "PRESENT"
+    ).count()
+    
     reqs = db.execute(select(AttendanceChangeRequest).order_by(AttendanceChangeRequest.created_at.desc())).scalars().all()
-    return templates.TemplateResponse("admin.html", {"request": request, "requests": reqs})
+    pending_count = len([r for r in reqs if r.status == "PENDING_APPROVAL"])
+    
+    return templates.TemplateResponse("admin_dashboard.html", {
+        "request": request, 
+        "requests": reqs,
+        "total_employees": total_emps,
+        "present_today": present_today,
+        "pending_requests": pending_count
+    })
+
+@app.get("/api/employees-list", response_model=List[EmployeeOut])
+def api_employees_list(db: Session = Depends(get_db)):
+    return db.query(Employee).all()
+
+@app.get("/admin/employees/{emp_id}", response_class=HTMLResponse)
+def admin_employee_detail(request: Request, emp_id: str, db: Session = Depends(get_db)):
+    # Check auth
+    if not request.cookies.get("admin_session"):
+        return RedirectResponse(url="/admin/login")
+
+    emp = db.get(Employee, emp_id)
+    if not emp:
+         raise HTTPException(status_code=404, detail="Employee not found")
+
+    # History
+    history = db.execute(
+        select(AttendanceRecord).where(
+            AttendanceRecord.emp_id == emp_id
+        ).order_by(AttendanceRecord.day.desc()).limit(30)
+    ).scalars().all()
+
+    return templates.TemplateResponse("employee_detail.html", {
+        "request": request, 
+        "emp": emp, 
+        "history": history
+    })
+
 
 
 @app.get("/admin/requests/{request_id}", response_class=HTMLResponse)
@@ -415,7 +480,6 @@ def admin_request_detail(request: Request, request_id: int, db: Session = Depend
         {"request": request, "req": req, "audit": req.audit_events},
     )
 
-
 @app.post("/admin/requests/{request_id}/approve")
 def admin_approve(request_id: int, actor_emp_id: str = Form(...), comment: str = Form(""), db: Session = Depends(get_db)):
     approve_request(request_id, RequestActionIn(actor_emp_id=actor_emp_id, comment=comment), db)
@@ -426,3 +490,4 @@ def admin_approve(request_id: int, actor_emp_id: str = Form(...), comment: str =
 def admin_reject(request_id: int, actor_emp_id: str = Form(...), comment: str = Form(""), db: Session = Depends(get_db)):
     reject_request(request_id, RequestActionIn(actor_emp_id=actor_emp_id, comment=comment), db)
     return RedirectResponse(url=f"/admin/requests/{request_id}", status_code=303)
+
