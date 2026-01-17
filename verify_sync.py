@@ -1,7 +1,7 @@
 import requests
 from datetime import date
 
-BASE_URL = "http://localhost:8007"
+BASE_URL = "http://localhost:8011"
 
 def verify_sync():
     print(f"Testing Sync Endpoint at: {BASE_URL}")

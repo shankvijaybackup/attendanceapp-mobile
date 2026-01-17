@@ -49,6 +49,61 @@ def get_db():
         db.close()
 
 
+@app.post("/api/atomicwork/sync-attendance", status_code=200)
+def atomicwork_sync(payload: AtomicworkSyncIn, db: Session = Depends(get_db)):
+    """
+    Directly apply attendance changes from Atomicwork.
+    No approval flow needed inside this app; it assumes the request is already approved.
+    """
+    # 1. Create Request Record (for audit history)
+    req = AttendanceChangeRequest(
+        emp_id=payload.emp_id,
+        request_type="ATOMICWORK_SYNC",
+        date_start=payload.date,
+        date_end=payload.date,
+        current_status="UNKNOWN", # We don't verify current status in sync
+        desired_status=payload.status,
+        reason_category="ATOMICWORK",
+        reason_text=payload.reason,
+        approver_emp_id="ATOMICWORK_SYSTEM",
+        status=RequestStatus.APPLIED.value,
+        created_at=datetime.utcnow(),
+        updated_at=datetime.utcnow(),
+    )
+    db.add(req)
+    db.flush()
+
+    # 2. Add Audit Log
+    _add_audit(db, req.id, actor_emp_id="ATOMICWORK", action="SYNC_APPLIED", comment=payload.approval_note)
+
+    # 3. Apply Change to Attendance Table
+    rec = db.execute(
+        select(AttendanceRecord).where(and_(AttendanceRecord.emp_id == payload.emp_id, AttendanceRecord.day == payload.date))
+    ).scalars().first()
+
+    if rec:
+        rec.status = payload.status
+        rec.last_updated_by = "ATOMICWORK"
+        rec.last_updated_at = datetime.utcnow()
+        rec.source_system = "ATOMICWORK"
+    else:
+        db.add(
+            AttendanceRecord(
+                emp_id=payload.emp_id,
+                day=payload.date,
+                status=payload.status,
+                source_system="ATOMICWORK",
+                last_updated_by="ATOMICWORK",
+                last_updated_at=datetime.utcnow(),
+            )
+        )
+    
+    db.commit()
+    return {"status": "success", "message": "Synced successfully", "request_id": req.id}
+
+
+
+
 import logging
 
 # Setup logging
