@@ -49,6 +49,15 @@ def get_db():
         db.close()
 
 
+@app.get("/api/version")
+def api_version():
+    return {
+        "version": "1.2.0",
+        "features": ["atomicwork_sync", "audit_logs", "employee_profile_ui"],
+        "last_updated": datetime.utcnow().isoformat()
+    }
+
+
 @app.post("/api/atomicwork/sync-attendance", status_code=200)
 def atomicwork_sync(payload: AtomicworkSyncIn, db: Session = Depends(get_db)):
     """
