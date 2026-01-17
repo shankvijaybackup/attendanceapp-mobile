@@ -69,10 +69,22 @@ class RequestWithAuditOut(RequestOut):
     audit_events: List[AuditEventOut] = []
 
 
+
+from pydantic import BaseModel, root_validator
+import json
+
 class AtomicworkSyncIn(BaseModel):
     emp_id: str
     date: date
     status: str
     reason: str
     approval_note: str
-    approval_note: str
+
+    @root_validator(pre=True)
+    def parse_stringified_json(cls, values):
+        if isinstance(values, str):
+            try:
+                return json.loads(values)
+            except Exception:
+                pass
+        return values
