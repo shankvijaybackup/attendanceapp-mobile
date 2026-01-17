@@ -75,4 +75,4 @@ class AtomicworkSyncIn(BaseModel):
     status: str
     reason: str
     approval_note: str
-```
+    approval_note: str
