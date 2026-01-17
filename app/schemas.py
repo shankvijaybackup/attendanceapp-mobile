@@ -70,7 +70,8 @@ class RequestWithAuditOut(RequestOut):
 
 
 
-from pydantic import BaseModel, root_validator
+
+from pydantic import BaseModel, model_validator
 import json
 
 class AtomicworkSyncIn(BaseModel):
@@ -80,25 +81,25 @@ class AtomicworkSyncIn(BaseModel):
     reason: str
     approval_note: str
 
-    @root_validator(pre=True)
-    def parse_stringified_json(cls, values):
-        if isinstance(values, str):
+    @model_validator(mode='before')
+    @classmethod
+    def parse_payload(cls, data):
+        # 1. Handle Double-Encoded JSON (String -> Dict)
+        if isinstance(data, str):
             try:
-                return json.loads(values)
+                data = json.loads(data)
             except Exception:
                 pass
-        return values
-
-    @root_validator(pre=True)
-    def parse_flexible_date(cls, values):
-        if isinstance(values, dict) and "date" in values:
-            raw_date = values["date"]
+        
+        # 2. Handle Flexible Date Formats
+        if isinstance(data, dict) and "date" in data:
+            raw_date = data["date"]
             if isinstance(raw_date, str):
                 try:
                     from dateutil import parser
-                    # dayfirst=True ensures DD-MM-YYYY is preferred over MM-DD-YYYY for ambiguous like 01-02-2026
-                    dt = parser.parse(raw_date, dayfirst=True) 
-                    values["date"] = dt.date()
+                    dt = parser.parse(raw_date, dayfirst=True)
+                    data["date"] = dt.date()
                 except Exception:
-                    pass # Let standard pydantic validation handle or fail it
-        return values
+                    pass
+        
+        return data
