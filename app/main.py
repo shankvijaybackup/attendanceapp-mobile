@@ -446,6 +446,25 @@ def admin_dashboard(request: Request, db: Session = Depends(get_db)):
         "pending_requests": pending_count
     })
 
+@app.get("/admin/requests/{request_id}", response_class=HTMLResponse)
+def admin_request_detail(request_id: int, request: Request, db: Session = Depends(get_db)):
+    if not request.cookies.get("admin_session"):
+        return RedirectResponse(url="/admin/login")
+
+    req = db.get(AttendanceChangeRequest, request_id)
+    if not req:
+        raise HTTPException(status_code=404, detail="Request not found")
+        
+    employee = db.get(Employee, req.emp_id)
+    audit_logs = req.audit_events
+    
+    return templates.TemplateResponse("request_detail.html", {
+        "request": request,
+        "req": req,
+        "employee": employee,
+        "audit_logs": audit_logs
+    })
+
 @app.get("/api/employees-list", response_model=List[EmployeeOut])
 def api_employees_list(db: Session = Depends(get_db)):
     return db.query(Employee).all()

@@ -263,6 +263,7 @@
                                 <th>Employee</th>
                                 <th>Type</th>
                                 <th>Dates</th>
+                                <th>Reason</th>
                                 <th>Status</th>
                                 <th>Action</th>
                             </tr>
@@ -274,8 +275,12 @@
                                 <td>{{ req.emp_id }}</td>
                                 <td>{{ req.request_type }}</td>
                                 <td>{{ req.date_start }} - {{ req.date_end }}</td>
+                                <td>{{ req.reason_text or '-' }}</td>
                                 <td>{{ req.status }}</td>
-                                <td><a href="/admin/requests/{{ req.id }}" style="color:blue">View</a></td>
+                                <td>
+                                    <a href="/admin/requests/{{ req.id }}" class="sim-btn"
+                                        style="background:#3b82f6; color:white; text-decoration:none; font-size:12px; padding:5px 10px;">Audit</a>
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
