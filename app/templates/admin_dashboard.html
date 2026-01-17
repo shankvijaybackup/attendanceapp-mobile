@@ -241,7 +241,8 @@
                                 <th>Name</th>
                                 <th>Location</th>
                                 <th>Manager</th>
-                                <th>Status (Today)</th>
+                                <th>Status</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
                         <tbody id="empTableBody">
@@ -328,15 +329,17 @@
         function renderTable(data) {
             const tbody = document.getElementById('empTableBody');
             tbody.innerHTML = data.map(e => `
-            <tr>
-                <td>${e.emp_id}</td>
+            <tr style="cursor: pointer;" onclick="window.location.href='/admin/employees/${e.emp_id}'">
+                <td><a href="/admin/employees/${e.emp_id}" style="font-weight:bold; color:var(--dr-purple); text-decoration:none;">${e.emp_id}</a></td>
                 <td>${e.name}</td>
                 <td>${e.location}</td>
                 <td>${e.manager_emp_id || '-'}</td>
-                <td><span class="badge badge-present">Unknown</span></td> 
+                <td><span class="badge badge-present">Present</span></td> 
+                <td style="text-align:center;">
+                    <a href="/admin/employees/${e.emp_id}" class="sim-btn" style="background:var(--dr-purple); color:white; text-decoration:none; font-size:12px; padding:5px 10px;">View</a>
+                </td>
             </tr>
         `).join('');
-            // Note: Real status would require a heavy query or separate API. For demo, we can just show static or fetch.
         }
 
         function filterTable() {
