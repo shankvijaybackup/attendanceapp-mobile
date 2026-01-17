@@ -98,14 +98,14 @@ def _apply_change(db: Session, req: AttendanceChangeRequest, actor_emp_id: str):
             rec.status = req.desired_status
             rec.last_updated_by = actor_emp_id
             rec.last_updated_at = datetime.utcnow()
-            rec.source_system = "ADMIN_FLOW"
+            rec.source_system = "ATOMICWORK"
         else:
             db.add(
                 AttendanceRecord(
                     emp_id=req.emp_id,
                     day=d,
                     status=req.desired_status,
-                    source_system="ADMIN_FLOW",
+                    source_system="ATOMICWORK",
                     last_updated_by=actor_emp_id,
                     last_updated_at=datetime.utcnow(),
                 )
@@ -225,7 +225,7 @@ def approve_request(request_id: int, payload: RequestActionIn, db: Session = Dep
         _apply_change(db, req, actor_emp_id=payload.actor_emp_id)
         req.status = RequestStatus.APPLIED.value
         req.updated_at = datetime.utcnow()
-        _add_audit(db, req.id, actor_emp_id=payload.actor_emp_id, action="APPLIED", comment="Applied to SAP_MOCK")
+        _add_audit(db, req.id, actor_emp_id=payload.actor_emp_id, action="APPLIED", comment="Applied via Atomicwork")
     except Exception as e:
         req.status = RequestStatus.FAILED.value
         req.updated_at = datetime.utcnow()
