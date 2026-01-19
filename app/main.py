@@ -425,12 +425,30 @@ def mobile_home(request: Request, db: Session = Depends(get_db)):
         select(AttendanceRecord).where(and_(AttendanceRecord.emp_id == emp_id, AttendanceRecord.day == today))
     ).scalars().first()
 
-    # Get recent history (last 5 days)
-    history = db.execute(
-        select(AttendanceRecord).where(
-            and_(AttendanceRecord.emp_id == emp_id, AttendanceRecord.day < today)
-        ).order_by(AttendanceRecord.day.desc()).limit(5)
-    ).scalars().all()
+    # Build complete 7-day history (including weekends/holidays)
+    history = []
+    for i in range(1, 8):  # Last 7 days (excluding today)
+        day = today - timedelta(days=i)
+        
+        # Check if weekend or holiday
+        is_weekend = day.weekday() > 4  # Sat=5, Sun=6
+        is_holiday = (day.month, day.day) in INDIAN_HOLIDAYS
+        
+        # Try to get actual record from DB
+        record = db.execute(
+            select(AttendanceRecord).where(and_(AttendanceRecord.emp_id == emp_id, AttendanceRecord.day == day))
+        ).scalars().first()
+        
+        if record:
+            # Use actual record
+            history.append({"day": day, "status": record.status})
+        elif is_weekend:
+            history.append({"day": day, "status": "WEEKEND"})
+        elif is_holiday:
+            history.append({"day": day, "status": "HOLIDAY"})
+        else:
+            # Workday with no record = ABSENT
+            history.append({"day": day, "status": "ABSENT"})
 
     return templates.TemplateResponse("mobile_home.html", {
         "request": request, 
