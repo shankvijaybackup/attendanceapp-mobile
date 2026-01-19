@@ -1,0 +1,14 @@
+*.db
+*.pyc
+__pycache__/
+.git/
+.gitignore
+*.md
+azure_deploy.md
+deployment_guide.md
+verify_*.py
+reproduce_issue.py
+demo_atomicwork_integration.py
+venv/
+.venv/
+env/
