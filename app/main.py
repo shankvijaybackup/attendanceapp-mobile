@@ -499,6 +499,7 @@ def mark_attendance_api(payload: MarkAttendanceIn, db: Session = Depends(get_db)
     
     if (is_weekend or is_holiday or SIMULATION_STATE == "HOLIDAY"):
         if SIMULATION_STATE != "UNLOCK_RESTRICTION":
+            logger.warning(f"Blocking attendance for {payload.emp_id} on {target_date}: HOLIDAY_BLOCK")
             raise HTTPException(status_code=400, detail="HOLIDAY_BLOCK")
         
     # 3. Date Validation (Past/Future)
@@ -506,8 +507,10 @@ def mark_attendance_api(payload: MarkAttendanceIn, db: Session = Depends(get_db)
     # OR we could allow backdated with unlock? Typically Unlock is for "Restricted Days".
     # Let's keep Past/Future strict for simplicity unless user asks.
     if target_date < today:
+        logger.warning(f"Blocking attendance for {payload.emp_id} on {target_date}: PAST_DATE_BLOCK")
         raise HTTPException(status_code=400, detail="PAST_DATE_BLOCK")
     if target_date > today:
+        logger.warning(f"Blocking attendance for {payload.emp_id} on {target_date}: FUTURE_DATE_BLOCK")
         raise HTTPException(status_code=400, detail="FUTURE_DATE_BLOCK")
     # -------------------------
     
